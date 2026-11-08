@@ -22,12 +22,11 @@ Next.js 16 uses Turbopack for development and production builds and `src/proxy.t
 ## Quick start
 
 1. Install Node.js 26.13.0 LTS (`nvm install && nvm use`) and run `npm ci`.
-2. Create a Clerk application in the [Clerk Dashboard](https://dashboard.clerk.com). Enable your preferred sign-in methods there, including Google if needed. Copy the development publishable key and secret key into Doppler as described below. OAuth credentials are configured in Clerk, not in this app.
-3. Create a [Neon project](https://console.neon.tech) and a development branch. Copy its pooled connection URL into `DATABASE_URL` and its direct connection URL into `DIRECT_DATABASE_URL`. Both use PostgreSQL with `sslmode=require`.
-4. Install the [Doppler CLI](https://docs.doppler.com/docs/cli), log in with `doppler login`, and create a project named `lyrainspiredfullstacktemp` with a `dev` config. If using a different project/config, update `doppler.yaml`.
-5. In the Doppler dashboard, add the Clerk and database variables listed in `.env.example`. Add the optional R2 variables when enabling file storage (see below). That file contains placeholders only. Run `doppler setup` in this directory to select the project/config.
-6. Run `npm run db:migrate` to apply the committed Drizzle migration to your development database.
-7. Run `npm run dev:secrets` and open [localhost:3000](http://localhost:3000). Sign up, then open `/jobs` to create and list your jobs.
+2. Install the Neon CLI with `npm i -g neon@latest` (or use `npx neon@latest`) and link this checkout to the intended Neon project and branch. `neon env pull` writes pooled `DATABASE_URL` and direct `DATABASE_URL_UNPOOLED` values to `.env.local`.
+3. Configure Clerk development keys in `.env.local` or inject them with Doppler. Create a Clerk application in the [Clerk Dashboard](https://dashboard.clerk.com), enable your preferred sign-in methods, and copy its publishable and secret keys. OAuth credentials are configured in Clerk, not in this app.
+4. Add the optional R2 variables when enabling file storage (see below). `.env.example` documents the expected variable names and contains placeholders only.
+5. For a new database branch, run `npm run db:migrate` to apply the committed Drizzle migration. Use an isolated development branch for schema changes; review migrations before applying them to production.
+6. Run `npm run dev` and open [localhost:3000](http://localhost:3000). Sign up, then open `/jobs` to create and list your jobs.
 
 Clerk, Neon, Doppler, and (for file storage) R2 resources and real credentials must be configured for a live run. This repository does not provision accounts or contain credentials.
 
@@ -39,7 +38,7 @@ Clerk, Neon, Doppler, and (for file storage) R2 resources and real credentials m
 | `npm run build:secrets` | Build with Doppler secrets |
 | `npm run start:secrets` | Run the production build with Doppler secrets |
 | `npm run db:generate` | Generate SQL migrations after editing the schema |
-| `npm run db:migrate` | Apply migrations using Doppler's direct database URL |
+| `npm run db:migrate` | Apply migrations using Neon’s direct `DATABASE_URL_UNPOOLED` |
 | `npm run db:push` | Push schema changes directly to a disposable development branch |
 | `npm run db:studio` | Inspect the database with Drizzle Studio |
 | `npm run typecheck` | Check TypeScript |
@@ -47,7 +46,7 @@ Clerk, Neon, Doppler, and (for file storage) R2 resources and real credentials m
 | `npm test` | Run Vitest tests |
 | `npm run test:coverage` | Run tests with V8 coverage |
 
-The standard `dev`, `build`, and `start` commands also work when a hosting platform or shell already injects environment variables. You can use a gitignored `.env.local` locally instead, but Doppler is the primary secrets source. Drizzle commands use Doppler; no dotenv files are loaded by `drizzle.config.ts`.
+The standard `dev`, `build`, and `start` commands load environment variables from `.env.local` through Next.js. `drizzle.config.ts` loads the same file and prefers Neon’s direct `DATABASE_URL_UNPOOLED` for migration commands, falling back to the legacy `DIRECT_DATABASE_URL` name and then `DATABASE_URL`. Doppler commands remain available for environments that inject secrets at runtime.
 
 ## Architecture and guidelines
 

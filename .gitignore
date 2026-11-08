@@ -47,3 +47,4 @@ yarn-error.log*
 .clerk/
 .doppler/
 .idea/
+.neon
